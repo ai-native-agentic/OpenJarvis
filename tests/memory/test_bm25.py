@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import pytest
 
 rank_bm25 = pytest.importorskip("rank_bm25")
+pytest.importorskip("openjarvis_rust")
 
 from openjarvis.core.events import EventBus, EventType  # noqa: E402
 from openjarvis.core.registry import MemoryRegistry  # noqa: E402
@@ -89,7 +92,7 @@ def test_retrieve_empty_query():
 
 
 def test_delete():
-    backend = _make_backend()
+    backend = cast(Any, _make_backend())
     doc_id = backend.store("deletable content")
     assert backend.count() == 1
     assert backend.delete(doc_id) is True
@@ -108,7 +111,7 @@ def test_delete_nonexistent():
 
 
 def test_clear():
-    backend = _make_backend()
+    backend = cast(Any, _make_backend())
     backend.store("doc one")
     backend.store("doc two")
     assert backend.count() == 2
@@ -130,10 +133,7 @@ def test_event_bus_store():
     mod.get_event_bus = lambda: bus
     try:
         backend.store("test event emission")
-        events = [
-            e for e in bus.history
-            if e.event_type == EventType.MEMORY_STORE
-        ]
+        events = [e for e in bus.history if e.event_type == EventType.MEMORY_STORE]
         assert len(events) == 1
         assert events[0].data["backend"] == "bm25"
         assert "doc_id" in events[0].data
@@ -151,10 +151,7 @@ def test_event_bus_retrieve():
     mod.get_event_bus = lambda: bus
     try:
         backend.retrieve("searchable")
-        events = [
-            e for e in bus.history
-            if e.event_type == EventType.MEMORY_RETRIEVE
-        ]
+        events = [e for e in bus.history if e.event_type == EventType.MEMORY_RETRIEVE]
         assert len(events) == 1
         assert events[0].data["backend"] == "bm25"
         assert events[0].data["num_results"] >= 1
